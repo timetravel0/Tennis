@@ -29,7 +29,7 @@ function init() {
     scene.add(directionalLight);
 
     const fieldGeometry = new THREE.PlaneGeometry(20, 10);
-    const fieldTexture = new THREE.TextureLoader().load('tennis_court.jpg');
+    const fieldTexture = new THREE.TextureLoader().load('images/tennis_court.jpg');
     const fieldMaterial = new THREE.MeshPhongMaterial({ map: fieldTexture });
     const field = new THREE.Mesh(fieldGeometry, fieldMaterial);
     field.rotation.x = -Math.PI / 2;
@@ -40,10 +40,14 @@ function init() {
     addBoundary(0, 5, 20, 0.1, 0.5);
     addBoundary(0, -5, 20, 0.1, 0.5);
 
-    const netGeometry = new THREE.BoxGeometry(0.1, 0.6, 10);
-    const netMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    // Correggere la rete
+    const netGeometry = new THREE.PlaneGeometry(10, 0.6);
+    const netTexture = new THREE.TextureLoader().load('images/tennis_net_texture.jpg');
+    const netMaterial = new THREE.MeshPhongMaterial({ map: netTexture, side: THREE.DoubleSide, transparent: true });
     const net = new THREE.Mesh(netGeometry, netMaterial);
     net.position.set(0, 0.3, 0);
+    net.rotation.x = -Math.PI / 2; // Orientamento corretto della rete
+    net.rotation.z = Math.PI / 2; // Ruota la rete orizzontalmente
     scene.add(net);
 
     const paddleGeometry = new THREE.BoxGeometry(0.2, 1.2, 1.5);
@@ -82,9 +86,9 @@ function init() {
     socket.on('startMultiplayerGame', startMultiplayerGame);
     socket.on('updatePaddle', (data) => {
         if (data.player === 1) {
-            paddle1.position.z = data.position.z;
+            paddle1.position.set(data.position.x, paddle1.position.y, data.position.z);
         } else {
-            paddle2.position.z = data.position.z;
+            paddle2.position.set(data.position.x, paddle2.position.y, data.position.z);
         }
     });
     socket.on('serveBall', () => {
@@ -137,22 +141,40 @@ function onKeyDown(event) {
     const paddleSpeed = 0.5;
     if (playerNumber) {
         switch (event.key) {
-            case 'ArrowLeft':
+            case 'ArrowLeft': // Move left
                 if (playerNumber === 1) {
                     paddle1.position.z = Math.max(paddle1.position.z - paddleSpeed, -4);
-                    socket.emit('movePaddle', { player: 1, position: { z: paddle1.position.z } });
+                    socket.emit('movePaddle', { player: 1, position: { x: paddle1.position.x, z: paddle1.position.z } });
                 } else if (playerNumber === 2) {
                     paddle2.position.z = Math.max(paddle2.position.z - paddleSpeed, -4);
-                    socket.emit('movePaddle', { player: 2, position: { z: paddle2.position.z } });
+                    socket.emit('movePaddle', { player: 2, position: { x: paddle2.position.x, z: paddle2.position.z } });
                 }
                 break;
-            case 'ArrowRight':
+            case 'ArrowRight': // Move right
                 if (playerNumber === 1) {
                     paddle1.position.z = Math.min(paddle1.position.z + paddleSpeed, 4);
-                    socket.emit('movePaddle', { player: 1, position: { z: paddle1.position.z } });
+                    socket.emit('movePaddle', { player: 1, position: { x: paddle1.position.x, z: paddle1.position.z } });
                 } else if (playerNumber === 2) {
                     paddle2.position.z = Math.min(paddle2.position.z + paddleSpeed, 4);
-                    socket.emit('movePaddle', { player: 2, position: { z: paddle2.position.z } });
+                    socket.emit('movePaddle', { player: 2, position: { x: paddle2.position.x, z: paddle2.position.z } });
+                }
+                break;
+            case 'ArrowDown': // Move down
+                if (playerNumber === 1) {
+                    paddle1.position.x = Math.max(paddle1.position.x - paddleSpeed, -9);
+                    socket.emit('movePaddle', { player: 1, position: { x: paddle1.position.x, z: paddle1.position.z } });
+                } else if (playerNumber === 2) {
+                    paddle2.position.x = Math.max(paddle2.position.x - paddleSpeed, 9);
+                    socket.emit('movePaddle', { player: 2, position: { x: paddle2.position.x, z: paddle2.position.z } });
+                }
+                break;
+            case 'ArrowUp': // Move up
+                if (playerNumber === 1) {
+                    paddle1.position.x = Math.min(paddle1.position.x + paddleSpeed, -7);
+                    socket.emit('movePaddle', { player: 1, position: { x: paddle1.position.x, z: paddle1.position.z } });
+                } else if (playerNumber === 2) {
+                    paddle2.position.x = Math.min(paddle2.position.x + paddleSpeed, 11);
+                    socket.emit('movePaddle', { player: 2, position: { x: paddle2.position.x, z: paddle2.position.z } });
                 }
                 break;
         }
@@ -163,25 +185,25 @@ function onKeyDown(event) {
     }
 }
 
-function serveBall() {
-    ballInPlay = true;
-    if (servingPlayer === 1) {
-        ball.position.set(-8.5, 0.8, paddle1.position.z);
-        ballSpeed.x = 0.2;
-    } else {
-        ball.position.set(8.5, 0.8, paddle2.position.z);
-        ballSpeed.x = -0.2;
-    }
-    ballSpeed.y = 0.05;
-    ballSpeed.z = (Math.random() - 0.5) * 0.1;
-}
-
 function resetBall() {
-    ball.position.set(0, 0.8, 0);
+    ball.position.set(0, 0.3, 0); // Altezza più bassa durante il reset
     ballSpeed.x = 0;
     ballSpeed.y = 0;
     ballSpeed.z = 0;
     ballInPlay = false;
+}
+
+function serveBall() {
+    ballInPlay = true;
+    if (servingPlayer === 1) {
+        ball.position.set(-8.5, 0.5, 0); // Altezza di servizio più alta per evitare la rete
+        ballSpeed.x = 0.3;
+    } else {
+        ball.position.set(8.5, 0.5, 0); // Altezza di servizio più alta per evitare la rete
+        ballSpeed.x = -0.3;
+    }
+    ballSpeed.y = 0.1;
+    ballSpeed.z = (Math.random() - 0.5) * 0.1;
 }
 
 function updateBall() {
@@ -191,23 +213,39 @@ function updateBall() {
     ball.position.y += ballSpeed.y;
     ball.position.z += ballSpeed.z;
 
-    ballSpeed.y -= 0.003;
+    ballSpeed.y -= 0.003; // Gravità ridotta
 
+    // Assicurarsi che la pallina non rimbalzi troppo in alto
     if (ball.position.y < 0.15) {
         ball.position.y = 0.15;
-        ballSpeed.y = -ballSpeed.y * 0.8;
+        ballSpeed.y = -ballSpeed.y * 0.7;
+
+        // Controllo del doppio rimbalzo
+        if (ball.position.x < -8.5 && servingPlayer === 1) {
+            scorePoint(2);
+        } else if (ball.position.x > 8.5 && servingPlayer === 2) {
+            scorePoint(1);
+        }
     }
 
+    // Collisione con i confini
     if (ball.position.z > 4.75 || ball.position.z < -4.75) {
         ballSpeed.z = -ballSpeed.z;
     }
 
+    // Collisione con le racchette
     if (ballCollidesWithPaddle(paddle1) || ballCollidesWithPaddle(paddle2)) {
-        ballSpeed.x = -ballSpeed.x * 1.02;
+        ballSpeed.x = -ballSpeed.x * 1.05;
         ballSpeed.z += (Math.random() - 0.5) * 0.02;
         ballSpeed.y = 0.1;
     }
 
+    // Collisione con la rete
+    if (ball.position.x < 0.2 && ball.position.x > -0.2 && ball.position.y < 0.6) {
+        ballSpeed.x = -ballSpeed.x * 0.5;
+    }
+
+    // Controllo se la pallina è fuori dai limiti (punto segnato)
     if (ball.position.x > 9.75) {
         scorePoint(1);
     } else if (ball.position.x < -9.75) {
@@ -223,7 +261,7 @@ function scorePoint(player) {
         scorePlayer2++;
         servingPlayer = 1;
     }
-    
+
     if (scorePlayer1 >= 4 && scorePlayer1 >= scorePlayer2 + 2) {
         games[0]++;
         scorePlayer1 = 0;
