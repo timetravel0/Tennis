@@ -2,8 +2,8 @@
 
 ## Test presenti
 
-- Nel workspace osservato non risultano test automatizzati.
-- Non sono presenti script `test` nel `package.json`.
+- Nel workspace osservato non risultano test unitari o di integrazione.
+- È disponibile uno smoke test tramite `npm test`.
 
 ## Livelli di test rilevati
 
@@ -13,7 +13,7 @@
 
 ## Copertura percepita
 
-- Copertura automatica: assente o non documentata.
+- Copertura automatica: smoke test base per build e avvio server.
 - Verifica del comportamento: affidata a run manuali del gioco.
 
 ## Gap principali
@@ -27,7 +27,6 @@
 
 ## Suggerimenti di miglioramento
 
-- Introdurre test di smoke per build e avvio server.
 - Aggiungere test di logica pura per scoring e reset in un modulo separato.
 - Coprire con test di integrazione gli eventi Socket.IO principali.
 - Verificare manualmente i path degli asset dopo ogni modifica al client.

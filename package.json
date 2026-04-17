@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "smoke": "node scripts/smoke.js",
+    "test": "npm run smoke"
   },
   "keywords": [],
   "author": "",

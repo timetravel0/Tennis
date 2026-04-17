@@ -11,6 +11,10 @@ let games = [0, 0];
 let socket, playerNumber;
 let gameMode = 'singleplayer';
 
+function getSocketUrl() {
+    return window.__SOCKET_IO_URL__ || window.location.origin;
+}
+
 function init() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -72,7 +76,7 @@ function init() {
 
     animate();
 
-    socket = io('http://localhost:3000');
+    socket = io(getSocketUrl());
     socket.on('playerNumber', (number) => {
         playerNumber = number;
         setCameraPosition();
